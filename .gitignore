@@ -1,0 +1,10 @@
+.angular
+.nx/
+.vscode
+.DS_Store
+node_modules
+dist
+nx-graph.html
+Testastack Main Flows (end-to-end).md
+TestaStack Testcase Manager Application Full Plan.MD
+TestStack Testcase Management Implementation Breakdown.MD

@@ -1,0 +1,175 @@
+<div class="upload-container">
+  <h1>Test Case File Upload</h1>
+  <p>
+    Upload your test case files or provide a Google Sheet link to get started.
+  </p>
+
+  <div class="upload-section">
+    <h2>Upload File</h2>
+    <div
+      class="drop-zone"
+      [class.drag-over]="isDragOver"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+    >
+      <div class="drop-zone-content">
+        <div *ngIf="!selectedFile">
+          <p>
+            Drag and drop your test case file here, or
+            <label for="file-input" class="file-link">
+              <i class="upload-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="48px"
+                  viewBox="0 -960 960 960"
+                  width="48px"
+                  fill="#e3e3e3"
+                >
+                  <path
+                    d="M450-313v-371L330-564l-43-43 193-193 193 193-43 43-120-120v371h-60ZM220-160q-24 0-42-18t-18-42v-143h60v143h520v-143h60v143q0 24-18 42t-42 18H220Z"
+                  />
+                </svg>
+              </i>
+              Browse Files
+            </label>
+          </p>
+          <p class="supported-formats">
+            Supported formats: CSV, Excel (.xlsx, .xls)
+          </p>
+        </div>
+
+        <div *ngIf="selectedFile && !isProcessing" class="file-selected">
+          <i class="file-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="48px"
+              viewBox="0 -960 960 960"
+              width="48px"
+              fill="#e3e3e3"
+            >
+              <path
+                d="M220-80q-24 0-42-18t-18-42v-680q0-24 18-42t42-18h361l219 219v521q0 24-18 42t-42 18H220Zm0-60h520v-494H554v-186H220v680Zm260.26-80q58.74 0 99.24-41.13Q620-302.25 620-360v-140h-40v140q0 42-28.75 71T480-260q-42 0-71-29t-29-71v-220q0-18 11.5-29t28.5-11q18 0 29 11t11 29v200h40v-200q0-33.6-23.08-56.8-23.07-23.2-56.5-23.2-33.42 0-56.92 23.2T340-580v220q0 57.75 41.2 98.87Q422.41-220 480.26-220ZM220-820v186-186 680-680Z"
+              />
+            </svg>
+          </i>
+          <p>
+            <strong>{{ selectedFile.name }}</strong>
+          </p>
+          <p>{{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="clearSelection()"
+          >
+            Remove
+          </button>
+        </div>
+
+        <div *ngIf="isProcessing" class="processing">
+          <div class="spinner"></div>
+          <p>Processing file and detecting columns...</p>
+        </div>
+      </div>
+
+      <input
+        id="file-input"
+        type="file"
+        accept=".csv,.xlsx,.xls,.docx,.doc"
+        (change)="onFileSelected($event)"
+        style="display: none"
+      />
+    </div>
+  </div>
+
+  <!-- Column Mapping Section -->
+  @if (showColumnMapping) {
+  <div class="upload-section">
+    <h2>Column Mapping</h2>
+    <p>
+      Map the columns from your file to the corresponding test case fields.
+      Required fields are marked with *.
+    </p>
+
+    <div class="mapping-container">
+      <div class="mapping-header">
+        <div class="header-cell">Test Case Field</div>
+        <div class="header-cell">File Column</div>
+      </div>
+
+      @for (mapping of columnMappings; track mapping.fileColumn) {
+      <div class="mapping-row">
+        <div class="field-cell">
+          <span class="field-label">{{
+            getFieldLabel(mapping.testCaseField)
+          }}</span>
+          @if (mapping.required) {
+          <span class="required">*</span>
+          }
+        </div>
+        <div class="column-cell">
+          <select
+            [value]="mapping.fileColumn"
+            (change)="onMappingChange(mapping, $any($event.target).value)"
+            class="column-select"
+          >
+            <option value="">-- Select Column --</option>
+            @for (column of fileColumns; track column) {
+            <option [value]="column">
+              {{ column }}
+            </option>
+            }
+          </select>
+          @if (mapping.fileColumn) {
+          <div class="suggestion-indicator">
+            <small class="text-success">✓ Suggested mapping</small>
+          </div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="mapping-info">
+      <div class="info-box">
+        <h4>Detected Columns ({{ fileColumns.length }})</h4>
+        <div class="column-tags">
+          @for (column of fileColumns; track column) {
+          <span class="column-tag">{{ column }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <div class="divider">
+    <span>OR</span>
+  </div>
+
+  <div class="upload-section">
+    <h2>Google Sheet Link</h2>
+    <div class="google-sheet-input">
+      <input
+        type="url"
+        placeholder="https://docs.google.com/spreadsheets/d/..."
+        [(ngModel)]="googleSheetUrl"
+        class="url-input"
+      />
+      <p class="help-text">
+        Paste the full URL of your Google Sheet containing test cases
+      </p>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="onSubmit()"
+      [disabled]="(!selectedFile && !googleSheetUrl) || isProcessing"
+    >
+      {{ showColumnMapping ? 'Upload & Process' : 'Next: Configure Mapping' }}
+    </button>
+  </div>
+</div>

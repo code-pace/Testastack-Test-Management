@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "projects": {
+    "frontend": {
+      "root": "apps/frontend",
+      "sourceRoot": "apps/frontend/src",
+      "projectType": "application",
+      "targets": {
+        "serve": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {"command": "echo 'Generate an Angular app with: nx g @nrwl/angular:application frontend'"}
+            ]
+          }
+        }
+      }
+    },
+    "backend": {
+      "root": "apps/backend",
+      "sourceRoot": "apps/backend/src",
+      "projectType": "application",
+      "targets": {
+        "serve": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {"command": "echo 'Generate a Nest app with: nx g @nrwl/nest:application backend'"}
+            ]
+          }
+        }
+      }
+    }
+  }
+}

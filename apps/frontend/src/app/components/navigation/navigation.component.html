@@ -1,0 +1,16 @@
+<nav class="navigation">
+  <ul>
+    @for (link of menuItems; track link.label) {
+        <li class="nav-item">
+            <a [routerLink]="['member', link.route]" routerLinkActive="active">{{ link.label }}</a>
+        </li>
+    }
+  </ul>
+  <footer class="nav-footer">
+    <div class="user">
+        <img src="assets/user-avatar.png" alt="User Avatar" class="avatar">
+        <h3 class="username">John Doe</h3>
+    </div>
+    <p>&copy; 2026 TestaStack. All rights reserved.</p>
+  </footer>
+</nav>
