@@ -118,6 +118,7 @@ export class FileUploadComponent {
     this.isDragOver = false;
     
     const files = event.dataTransfer?.files;
+    console.log(files?.length);
     if (files && files.length > 0) {
       this.selectedFile = files[0];
       this.processFileForColumns(files[0]);

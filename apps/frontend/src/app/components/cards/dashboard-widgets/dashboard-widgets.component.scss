@@ -1,0 +1,59 @@
+@import '../../../../styles.scss';
+
+
+
+.widget {
+    background-color: #100c3e;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    margin: 0.5rem;
+
+    .title {
+        color: var(--primary);
+    }
+}
+
+.in-progress, .failed, .passed, .total-test-cases {
+    width: 200px;
+    height: 200px;
+}
+
+.in-progress {
+    .icon svg {
+        background-color: var(--color-chart-4);
+    }
+}
+
+.failed {
+    .icon svg {
+        background-color: var(--color-chart-1);
+    }
+}
+
+.passed {
+    .icon svg {
+        background-color: var(--color-chart-2);
+    }
+}
+
+.total-test-cases {
+    .icon svg {
+        background-color: var(--color-chart-3);
+    }
+}
+
+.execution-trend, .suite-distribution {
+    width: -webkit-fill-available;
+    height: 100%;
+}
+
+.icon svg {
+    width: 60px;
+    height: 60px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

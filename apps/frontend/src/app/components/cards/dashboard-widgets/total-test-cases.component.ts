@@ -5,7 +5,19 @@ import { CommonModule } from '@angular/common';
   selector: 'app-total-test-cases',
   standalone: true,
   imports: [CommonModule],
-  template: `<p>total-test-cases works!</p>`,
+  template: `
+  <div class="widget total-test-cases">
+    <span class="icon">
+      <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#e3e3e3"><path d="M277-279h275v-60H277v60Zm0-171h406v-60H277v60Zm0-171h406v-60H277v60Zm-97 501q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm0-600v600-600Z"/></svg>
+    </span>
+    <h3 class="title">Total Test Cases</h3>
+    <p class="value">1234</p>
+    <div class="distribution">
+      <span>Manual: 800</span>
+      <span>Automated: 434</span>
+    </div>
+  </div>
+  `,
   styleUrl: './dashboard-widgets.component.scss',
 })
 export class TotalTestCasesComponent {}

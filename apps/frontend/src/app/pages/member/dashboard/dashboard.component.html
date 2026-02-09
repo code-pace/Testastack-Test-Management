@@ -1,1 +1,18 @@
-<p>dashboard works!</p>
+<main class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Overview of your testing activities and insights.</p>
+  </header>
+  <div class="dashboard-contents">
+    <section class="widgets">
+      <app-total-test-cases></app-total-test-cases>
+      <app-passed></app-passed>
+      <app-failed></app-failed>
+      <app-in-progress></app-in-progress>
+    </section>
+    <section class="charts">
+      <app-execution-trend></app-execution-trend>
+      <app-suite-distribution></app-suite-distribution>
+    </section>
+  </div>
+</main>

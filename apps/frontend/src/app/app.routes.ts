@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { FileUploadComponent } from './pages/member/file-upload/file-upload.component';
 import { DashboardComponent } from './pages/member/dashboard/dashboard.component';
+import { TestManagementComponent } from './pages/member/test-management/test-management.component';
 
 export const appRoutes: Routes = [
   { 
@@ -16,4 +17,8 @@ export const appRoutes: Routes = [
     path: 'member/dashboard', 
     component: DashboardComponent 
   },
+  {
+    path: 'member/test-management',
+    component: TestManagementComponent
+  }
 ];
