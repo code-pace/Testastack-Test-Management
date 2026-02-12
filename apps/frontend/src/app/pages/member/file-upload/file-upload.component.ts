@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ColumnMappingService } from '../../../services/column-mapping.service';
 
 interface ColumnMapping {
   fileColumn: string;
@@ -15,6 +16,13 @@ interface SuggestedMapping {
   suggestions: string[];
 }
 
+enum FileType {
+  CSV = 'csv',
+  EXCEL = 'xlsx',
+  XLS = 'xls'
+}
+
+
 @Component({
   selector: 'app-file-upload',
   standalone: true,
@@ -25,18 +33,21 @@ interface SuggestedMapping {
 export class FileUploadComponent {
   selectedFile: File | null = null;
   googleSheetUrl: string = '';
+  isUrlValid: boolean = true;
   isDragOver: boolean = false;
   showColumnMapping: boolean = false;
   fileColumns: string[] = [];
+  detectedSheetsColumns: any[] = [];
   columnMappings: ColumnMapping[] = [];
   isProcessing: boolean = false;
+  private columnMappingService = inject(ColumnMappingService);
 
   // Standard test case fields with intelligent suggestions
   suggestedMappings: SuggestedMapping[] = [
     {
       field: 'testCaseId',
       label: 'Test Case ID',
-      required: true,
+      required: false,
       suggestions: ['id', 'testcaseid', 'tc_id', 'case_id', 'test_id', 'testcase_id']
     },
     {
@@ -99,13 +110,56 @@ export class FileUploadComponent {
     const file = event.target.files[0];
     if (file) {
       this.selectedFile = file;
-      this.processFileForColumns(file);
+      this.checkSupportedFileType(file);
+      console.log(this.selectedFile);
+      console.log(this.isUrlValid);
+      this.columnMappingService.mockUploadFile(file);
+      if (this.columnMappingService.detectedColumns.length > 0) {
+        this.detectedSheetsColumns = this.columnMappingService.detectedColumns;
+        for(const sheet of this.detectedSheetsColumns) {
+          console.log('Detected columns for sheet:', sheet.data, sheet.columns);
+        }
+      } else {
+        this.detectedSheetsColumns = [];
+        alert('No Sheets detected in the file. Please check the file format and try again.');
+        return;
+      }
     }
   }
 
+  onGoogleSheetUrlChange(event: any): void {
+    const tempUrl = event.target.value;
+    const urlPattern = /^https:\/\/docs\.google\.com\/spreadsheets\/([a-zA-Z0-9-_]+)(\/.*)?$/;
+    if (!urlPattern.test(tempUrl)) {
+      this.isUrlValid = false;
+    } else {
+      this.isUrlValid = true;
+      this.googleSheetUrl = tempUrl;
+    }
+  }
+  disableConfigureMapping(): boolean {
+    if (this.isProcessing) {
+      return true;
+    }
+    else if (
+      this.selectedFile && 
+      !this.googleSheetUrl
+    ) {
+      return false;
+    }
+    else if (
+      this.googleSheetUrl && 
+      this.isUrlValid && 
+      !(!!this.selectedFile)
+    ) {
+      return false;
+    }
+    return true;
+  }
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     this.isDragOver = true;
+    this.selectedFile = null;
   }
 
   onDragLeave(event: DragEvent): void {
@@ -116,12 +170,33 @@ export class FileUploadComponent {
   onDrop(event: DragEvent): void {
     event.preventDefault();
     this.isDragOver = false;
-    
     const files = event.dataTransfer?.files;
-    console.log(files?.length);
-    if (files && files.length > 0) {
+    const numberOfFiles = files?.length || 0;
+    if (files && numberOfFiles > 0) {
+      if (numberOfFiles === 2) {
+        alert('Please drop only one file at a time.');
+        return;
+      }
+      this.checkSupportedFileType(files[0]);
       this.selectedFile = files[0];
-      this.processFileForColumns(files[0]);
+    }
+  }
+
+  async  checkSupportedFileType(file: File): Promise<void> {
+    try {
+      const isFileValid = file.name.endsWith(FileType.CSV) || file.name.endsWith(FileType.EXCEL) || file.name.endsWith(FileType.XLS);
+      if (!isFileValid) {
+        console.error('Unsupported file type:', file.name);
+        alert('Unsupported file type. Please upload a CSV or Excel file.');
+        this.selectedFile = null;
+        return;
+      }
+    }
+    catch (error) {
+      console.error('Error checking file type:', error);
+      alert('Error checking file type. Please try again.');
+      this.selectedFile = null;
+      return;
     }
   }
 
