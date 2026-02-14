@@ -88,60 +88,53 @@
 
   <!-- Column Mapping Section -->
   @if (showColumnMapping) {
-  <div class="upload-section">
+  <div class="mapping-section">
     <h2>Column Mapping</h2>
     <p>
       Map the columns from your file to the corresponding test case fields.
-      Required fields are marked with *.
+      Required fields are marked with
     </p>
 
     <div class="mapping-container">
       <div class="mapping-header">
-        <div class="header-cell">Test Case Field</div>
-        <div class="header-cell">File Column</div>
+        <div class="header-cell">Sheet Name Found</div>
+        <div class="header-cell">Detected Column</div>
       </div>
 
-      @for (mapping of columnMappings; track mapping.fileColumn) {
-      <div class="mapping-row">
-        <div class="field-cell">
-          <span class="field-label">{{
-            getFieldLabel(mapping.testCaseField)
-          }}</span>
-          @if (mapping.required) {
-          <span class="required">*</span>
-          }
-        </div>
-        <div class="column-cell">
-          <select
-            [value]="mapping.fileColumn"
-            (change)="onMappingChange(mapping, $any($event.target).value)"
-            class="column-select"
-          >
-            <option value="">-- Select Column --</option>
-            @for (column of fileColumns; track column) {
-            <option [value]="column">
-              {{ column }}
-            </option>
-            }
-          </select>
-          @if (mapping.fileColumn) {
-          <div class="suggestion-indicator">
-            <small class="text-success">✓ Suggested mapping</small>
+      @for (sheet of sheetColumns; track sheet.data) {
+        <div class="mapping-row">
+          <div class="field-cell">
+            <span class="field-label">{{ sheet.data }}</span>
           </div>
-          }
+          <div class="column-cell">
+            <div class="column-checkboxes">
+              <label class="checkbox-label all-checkbox">
+                  <input 
+                    type="checkbox" 
+                    value="All" 
+                  />
+                  <span>Select All</span>
+                </label>
+              @for (column of sheet.columns; track column) {
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    [value]="column" 
+                  />
+                  <span>{{ column }}</span>
+                </label>
+              }
+            </div>
+          </div>
         </div>
-      </div>
       }
-    </div>
-
-    <div class="mapping-info">
-      <div class="info-box">
-        <h4>Detected Columns ({{ fileColumns.length }})</h4>
-        <div class="column-tags">
-          @for (column of fileColumns; track column) {
-          <span class="column-tag">{{ column }}</span>
-          }
-        </div>
+      <div class="mapping-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+        >
+          Continue Processing
+        </button>
       </div>
     </div>
   </div>

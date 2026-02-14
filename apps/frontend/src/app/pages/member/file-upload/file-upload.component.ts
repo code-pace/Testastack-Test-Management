@@ -36,94 +36,17 @@ export class FileUploadComponent {
   isUrlValid: boolean = true;
   isDragOver: boolean = false;
   showColumnMapping: boolean = false;
-  fileColumns: string[] = [];
+  sheetColumns: any = [];
   detectedSheetsColumns: any[] = [];
   columnMappings: ColumnMapping[] = [];
   isProcessing: boolean = false;
   private columnMappingService = inject(ColumnMappingService);
-
-  // Standard test case fields with intelligent suggestions
-  suggestedMappings: SuggestedMapping[] = [
-    {
-      field: 'testCaseId',
-      label: 'Test Case ID',
-      required: false,
-      suggestions: ['id', 'testcaseid', 'tc_id', 'case_id', 'test_id', 'testcase_id']
-    },
-    {
-      field: 'testScenario',
-      label: 'Test Scenario',
-      required: true,
-      suggestions: ['scenario', 'test_scenario', 'title', 'name', 'summary', 'description']
-    },
-    {
-      field: 'precondition',
-      label: 'Precondition',
-      required: false,
-      suggestions: ['precondition', 'pre_conditions', 'prerequisites', 'setup', 'given']
-    },
-    {
-      field: 'testData',
-      label: 'Test Data',
-      required: false,
-      suggestions: ['data', 'test_data', 'input_data', 'parameters', 'testdata']
-    },
-    {
-      field: 'testSteps',
-      label: 'Test Steps',
-      required: true,
-      suggestions: ['steps', 'test_steps', 'procedure', 'actions', 'how_to_test']
-    },
-    {
-      field: 'expectedResult',
-      label: 'Expected Result',
-      required: true,
-      suggestions: ['expected', 'expected_result', 'result', 'outcome', 'then']
-    },
-    {
-      field: 'actualResult',
-      label: 'Actual Result',
-      required: false,
-      suggestions: ['actual', 'actual_result', 'outcome_actual', 'result_actual']
-    },
-    {
-      field: 'status',
-      label: 'Status',
-      required: false,
-      suggestions: ['status', 'state', 'result_status', 'pass_fail', 'outcome_status']
-    },
-    {
-      field: 'priority',
-      label: 'Priority',
-      required: false,
-      suggestions: ['priority', 'importance', 'severity', 'level']
-    },
-    {
-      field: 'notes',
-      label: 'Notes',
-      required: false,
-      suggestions: ['notes', 'comments', 'remarks', 'additional_info', 'observations']
-    }
-  ];
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
       this.selectedFile = file;
       this.checkSupportedFileType(file);
-      console.log(this.selectedFile);
-      console.log(this.isUrlValid);
-      this.columnMappingService.mockUploadFile(file);
-      if (this.columnMappingService.detectedColumns.length > 0) {
-        this.detectedSheetsColumns = this.columnMappingService.detectedColumns;
-        for(const sheet of this.detectedSheetsColumns) {
-          console.log('Detected columns for sheet:', sheet.data, sheet.columns);
-        }
-      } else {
-        this.detectedSheetsColumns = [];
-        alert('No Sheets detected in the file. Please check the file format and try again.');
-        return;
-      }
     }
   }
 
@@ -200,83 +123,6 @@ export class FileUploadComponent {
     }
   }
 
-  async processFileForColumns(file: File): Promise<void> {
-    this.isProcessing = true;
-    try {
-      if (file.name.endsWith('.csv')) {
-        await this.processCsvFile(file);
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        await this.processExcelFile(file);
-      }
-      this.generateColumnMappings();
-      this.showColumnMapping = true;
-    } catch (error) {
-      console.error('Error processing file:', error);
-      alert('Error processing file. Please check the file format and try again.');
-    } finally {
-      this.isProcessing = false;
-    }
-  }
-
-  async processCsvFile(file: File): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      console.log(reader);
-      reader.onload = (e) => {
-        try {
-          const csv = e.target?.result as string;
-          const lines = csv.split('\n');
-          if (lines.length > 0) {
-            // Assume first line contains headers
-            const headers = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
-            this.fileColumns = headers.filter(header => header.length > 0);
-          }
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsText(file);
-    });
-  }
-
-  async processExcelFile(file: File): Promise<void> {
-    // For now, we'll use a simple approach. In a real app, you'd use a library like xlsx
-    // For demonstration, we'll assume the first row contains headers
-    // This is a placeholder - in production, use a proper Excel parsing library
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          // This is a simplified approach. In production, use a proper Excel library
-          // For now, we'll create mock column names that might be typical
-          console.log(e);
-          this.fileColumns = [
-            'Test Case ID', 'Test Scenario', 'Preconditions', 'Test Data', 
-            'Test Steps', 'Expected Results', 'Actual Results', 'Status'
-          ];
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  generateColumnMappings(): void {
-    this.columnMappings = this.suggestedMappings.map(mapping => {
-      const suggestedColumn = this.findBestMatch(mapping.suggestions, this.fileColumns);
-      return {
-        fileColumn: suggestedColumn || '',
-        testCaseField: mapping.field,
-        required: mapping.required
-      };
-    });
-  }
-
   findBestMatch(suggestions: string[], availableColumns: string[]): string {
     for (const suggestion of suggestions) {
       const match = availableColumns.find(col => 
@@ -291,46 +137,32 @@ export class FileUploadComponent {
     mapping.fileColumn = selectedColumn;
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
+    let response: any;
     if (this.selectedFile) {
-      if (!this.showColumnMapping) {
-        // If we haven't shown column mapping yet, process the file first
-        this.processFileForColumns(this.selectedFile);
-        return;
-      }
+      response = await this.columnMappingService.callUploadApi(this.selectedFile);
+    } 
+    else if (this.googleSheetUrl) {
+      response = await this.columnMappingService.callGoogleSheetUrlApi(this.googleSheetUrl);
+    };
+  
+    if(!response || response.code !== 0) {
+      alert('Error detecting columns. Please check the file or URL and try again.');
+      return;
+    };
+    this.sheetColumns = response.body.sheets;
+    // this.columnMappingService.setDetectedColumns(response.body.sheets);
+    console.log(this.sheetColumns);
+    this.clearSelection();
+    this.showColumnMapping = true;
 
-      // Validate required mappings
-      const missingRequired = this.columnMappings.filter(m => m.required && !m.fileColumn);
-      if (missingRequired.length > 0) {
-        alert(`Please map the following required fields: ${missingRequired.map(m => this.getFieldLabel(m.testCaseField)).join(', ')}`);
-        return;
-      }
-
-      // Handle file upload with mappings
-      console.log('Uploading file with mappings:', {
-        file: this.selectedFile,
-        mappings: this.columnMappings
-      });
-      // TODO: Implement file upload to backend with column mappings
-    } else if (this.googleSheetUrl) {
-      // Handle Google Sheet URL
-      console.log('Processing Google Sheet URL:', this.googleSheetUrl);
-      // TODO: Implement Google Sheet processing
-    } else {
-      alert('Please select a file or provide a Google Sheet URL');
-    }
-  }
-
-  getFieldLabel(field: string): string {
-    const mapping = this.suggestedMappings.find(m => m.field === field);
-    return mapping ? mapping.label : field;
   }
 
   clearSelection(): void {
     this.selectedFile = null;
     this.googleSheetUrl = '';
     this.showColumnMapping = false;
-    this.fileColumns = [];
+    // this.sheetColumns = [];
     this.columnMappings = [];
   }
 }

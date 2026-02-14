@@ -3,33 +3,50 @@ import { Injectable } from '@angular/core';
 type DetectedColumn = {
   data: string; // Sheet name or file section
   columns: string[]; // Detected column names
-}
+};
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ColumnMappingService {
-  private uploadUrl: string = '/api/testcases/upload';
+  private mappingUrl: string = '/api/v1/testcases/column-mapping';
   detectedColumns: DetectedColumn[] = [];
-  constructor() { 
+  constructor() {}
 
-  }
-
-  async callUploadApi(file: File): Promise<DetectedColumn[]> {
+  async callUploadApi(file: File): Promise<any> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch(this.uploadUrl, {
-      method: 'POST',
-      body: formData
-    });
-    const result = await response.json();
-    if (result.code !== 200) {
-      throw new Error(result.message || 'Failed to upload file');
+    try {
+      const response = await fetch(this.mappingUrl, {
+        method: 'POST',
+        body: formData,
+      });
+      // return await response.json();
+      return await this.mockResponse(); // Use mock response for testing
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw error;
     }
-    if (!result.data || !Array.isArray(result.data.columns)) {
-      throw new Error('Invalid response from server: missing columns data');
+  }
+
+  async callGoogleSheetUrlApi(url: string): Promise<any> {
+    try {
+      const response = await fetch(this.mappingUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sheetUrl: url,
+          requestType: 'GoogleSheet',
+        }),
+      });
+      // return await response.json();
+      return await this.mockResponse(); // Use mock response for testing
+    } catch (error) {
+      console.error('Error fetching Google Sheet data:', error);
+      throw error;
     }
-    return result.data.columns;
   }
 
   setDetectedColumns(columns: DetectedColumn[]): void {
@@ -41,21 +58,29 @@ export class ColumnMappingService {
     this.setDetectedColumns(uploadPromise);
   }
 
-  mockUploadFile(file: File): void {
+  mockResponse(): Promise<any> {
     // Mock column detection based on file name
-    this.detectedColumns = [
+    const mockDetectedColumns = [
       {
         data: 'Sheet 1',
-        columns: ['Test Case ID', 'Title', 'Description', 'Priority', 'Status']
+        columns: ['Test Case ID', 'Title', 'Description', 'Priority', 'Status'],
       },
       {
         data: 'Sheet 2',
-        columns: ['ID', 'Name', 'Details', 'Severity', 'State']
+        columns: ['ID', 'Name', 'Details', 'Severity', 'State'],
       },
       {
         data: 'Sheet 3',
-        columns: ['TC_ID', 'Test_Name', 'Test_Desc', 'Test_Priority', 'Test_Status']
-      }
+        columns: ['TC_ID', 'Test_Name', 'Test_Desc', 'Test_Priority', 'Test_Status'],
+      },
     ];
+    const mockResponse = {
+      code: 0,
+      message: 'Columns detected successfully',
+      body: {
+        sheets: mockDetectedColumns,
+      },
+    };
+    return Promise.resolve(mockResponse);
   }
 }
