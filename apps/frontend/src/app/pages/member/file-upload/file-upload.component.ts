@@ -17,7 +17,12 @@ interface ColumnMapping {
 
 interface FinalSheetColumnMapping {
   sheetName: string;
-  columnMappings: ColumnMapping[];
+  columns: string[];
+}
+
+interface SheetColumnMappingPayload {
+  uniqueId: string;
+  data: FinalSheetColumnMapping[];
 }
 
 enum FileType {
@@ -44,6 +49,7 @@ export class FileUploadComponent {
   minColumnsRequired: number = 3;
   finalSheetColumnMapping: FinalSheetColumnMapping[] = [];
   isProcessing: boolean = false;
+  processingUniqueId: string = '';
   private columnMappingService = inject(ColumnMappingService);
   window: Window = window;
 
@@ -164,6 +170,7 @@ export class FileUploadComponent {
         allowColumnSelection: sheet.columns.length >= this.minColumnsRequired
       }
     });
+    this.processingUniqueId = response.body.uniqueId;
     console.log(this.sheetColumns);
     this.clearSelection();
     this.showColumnMapping = true;
@@ -219,5 +226,32 @@ export class FileUploadComponent {
     this.selectedFile = null;
     this.googleSheetUrl = '';
     this.showColumnMapping = false;
+  }
+
+  async submitMappedData(): Promise<void> {
+    let payload: SheetColumnMappingPayload;
+    this.finalSheetColumnMapping = 
+      this.sheetColumns
+      .filter(sheet => sheet.allowColumnSelection)
+      .map(sheet => ({
+        sheetName: sheet.sheetName,
+        columns: sheet.columns
+          .filter(column => column.selected)
+          .map(column => column.name)
+      }));
+    if (this.finalSheetColumnMapping.length === 0) {
+      alert('Please select at least one sheet with the required number of columns.');
+      return;
+    }
+    payload = {
+      data: this.finalSheetColumnMapping,
+      uniqueId: this.processingUniqueId
+    }
+    console.log(payload);
+    const response = await this.columnMappingService.continueProcessing(payload)
+    if(!response || response.code !== 0) {
+      alert('Error processing data. Please try again.');
+      return;
+    }
   }
 }
