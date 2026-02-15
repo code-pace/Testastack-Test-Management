@@ -3,17 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ColumnMappingService } from '../../../services/column-mapping.service';
 
-interface ColumnMapping {
-  fileColumn: string;
-  testCaseField: string;
-  required: boolean;
+interface ColumnState {
+  name: string;
+  selected: boolean;
 }
 
-interface SuggestedMapping {
-  field: string;
-  label: string;
-  required: boolean;
-  suggestions: string[];
+interface ColumnMapping {
+  sheetName: string;
+  columns: ColumnState[];
+  selectAll?: boolean;
+  allowColumnSelection?: boolean;
+}
+
+interface FinalSheetColumnMapping {
+  sheetName: string;
+  columnMappings: ColumnMapping[];
 }
 
 enum FileType {
@@ -36,11 +40,17 @@ export class FileUploadComponent {
   isUrlValid: boolean = true;
   isDragOver: boolean = false;
   showColumnMapping: boolean = false;
-  sheetColumns: any = [];
-  detectedSheetsColumns: any[] = [];
-  columnMappings: ColumnMapping[] = [];
+  sheetColumns: ColumnMapping[] = [];
+  minColumnsRequired: number = 3;
+  finalSheetColumnMapping: FinalSheetColumnMapping[] = [];
   isProcessing: boolean = false;
   private columnMappingService = inject(ColumnMappingService);
+  window: Window = window;
+
+  ngOnInit(): void {
+    console.log(window);
+  }
+
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
@@ -133,10 +143,6 @@ export class FileUploadComponent {
     return '';
   }
 
-  onMappingChange(mapping: ColumnMapping, selectedColumn: string): void {
-    mapping.fileColumn = selectedColumn;
-  }
-
   async onSubmit(): Promise<void> {
     let response: any;
     if (this.selectedFile) {
@@ -150,19 +156,68 @@ export class FileUploadComponent {
       alert('Error detecting columns. Please check the file or URL and try again.');
       return;
     };
-    this.sheetColumns = response.body.sheets;
-    // this.columnMappingService.setDetectedColumns(response.body.sheets);
+    this.sheetColumns = response.body.sheets.map((sheet: ColumnMapping) => {
+      return {
+        sheetName: sheet.sheetName,
+        columns: sheet.columns.map((col: ColumnState) => ({ name: col, selected: true })),
+        selectAll: true,
+        allowColumnSelection: sheet.columns.length >= this.minColumnsRequired
+      }
+    });
     console.log(this.sheetColumns);
     this.clearSelection();
     this.showColumnMapping = true;
 
   }
 
+  resetSheet(sheet: ColumnMapping): void {
+    if (!sheet.allowColumnSelection) {
+      sheet.allowColumnSelection = !sheet.allowColumnSelection;
+      this.toggleSelectAll(sheet);
+    }
+    else {
+      sheet.allowColumnSelection = !sheet.allowColumnSelection;
+      this.toggleSelectAll(sheet);
+    }
+    
+  }
+
+  toggleSelectAll(sheet: ColumnMapping): void {
+    if (sheet.selectAll && sheet.allowColumnSelection) {
+      sheet.allowColumnSelection = false;
+    }
+    sheet.selectAll = !sheet.selectAll;
+    sheet.columns.forEach((column: any) => {
+      column.selected = sheet.selectAll;
+    });
+  }
+
+  toggleSelectColumn(sheet: ColumnMapping, column: ColumnState): void {
+    column.selected = !column.selected;
+    sheet.selectAll = sheet.columns.every((col: ColumnState) => col.selected);
+    if(this.sheetByColumnNumberSelectedMaxCheck(sheet)) {
+      this.disableSheetColumnSelection(sheet);
+    } else {
+      this.enableSheetColumnSelection(sheet);
+    }
+  }
+
+  sheetByColumnNumberSelectedMaxCheck(sheet: ColumnMapping): boolean {
+    const selectedCount = sheet.columns.filter(col => col.selected).length;
+    return selectedCount < this.minColumnsRequired;
+  }
+
+  disableSheetColumnSelection(sheet: ColumnMapping): void {
+    sheet.allowColumnSelection = false;
+  }
+
+  enableSheetColumnSelection(sheet: ColumnMapping): void {
+    sheet.allowColumnSelection = true;
+  }
+
   clearSelection(): void {
     this.selectedFile = null;
     this.googleSheetUrl = '';
     this.showColumnMapping = false;
-    // this.sheetColumns = [];
-    this.columnMappings = [];
   }
 }

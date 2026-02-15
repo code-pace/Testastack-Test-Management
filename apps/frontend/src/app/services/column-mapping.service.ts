@@ -62,15 +62,15 @@ export class ColumnMappingService {
     // Mock column detection based on file name
     const mockDetectedColumns = [
       {
-        data: 'Sheet 1',
+        sheetName: 'Sheet 1',
         columns: ['Test Case ID', 'Title', 'Description', 'Priority', 'Status'],
       },
       {
-        data: 'Sheet 2',
+        sheetName: 'Sheet 2',
         columns: ['ID', 'Name', 'Details', 'Severity', 'State'],
       },
       {
-        data: 'Sheet 3',
+        sheetName: 'Sheet 3',
         columns: ['TC_ID', 'Test_Name', 'Test_Desc', 'Test_Priority', 'Test_Status'],
       },
     ];
